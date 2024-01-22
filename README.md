@@ -4,4 +4,3 @@ OmerloNews, un site d'actualités interactif, utilise l'API du New York Times et
 ![Description de l'image](imagesgit/im5_2.jpg)
 ![Description de l'image](imagesgit/im5_4.jpg)
 ![Description de l'image](imagesgit/im5_6.jpg)
-![Description de l'image](imagesgit/im5_7.jpg)
