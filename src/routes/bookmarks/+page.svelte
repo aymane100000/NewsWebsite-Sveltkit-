@@ -1,11 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import '../../global.css';
+  import '../../style.css';
   import type { Article } from '../../types/types';
+
   let bookmarks: Article[] = [];
 
   onMount(() => {
-    const storedBookmarks = localStorage.getItem('bookmarks');
-    bookmarks = storedBookmarks ? JSON.parse(storedBookmarks) : [];
+    try {
+      const storedBookmarks = localStorage.getItem('bookmarks');
+      bookmarks = storedBookmarks ? JSON.parse(storedBookmarks) : [];
+    } catch (error) {
+      console.error("Erreur lors du chargement des bookmarks:", error);
+      bookmarks = [];
+    }
   });
 </script>
 

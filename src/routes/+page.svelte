@@ -1,45 +1,35 @@
 
-<script>
 
-    import { onMount } from 'svelte';
-    import { getLatestArticles } from '../lib/api';
-    import { goto } from '$app/navigation';
-    import '../global.css';
-    import '../style.css';
-    import { articlesStore } from '../stores.js';
-    //import type { Article } from '../types/types';
-    
-  
-  
-    let searchQuery = '';
-    /**
-	 * @type {any[]}
-	 */
-    let filteredArticles = [];
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { getLatestArticles } from '../lib/api';
+  import { goto } from '$app/navigation';
+  import '../global.css';
+  import '../style.css';
+  import { articlesStore } from '../store';
+  import type { Article } from '../types/types';
+  import { writable } from 'svelte/store';
 
-  
-    // onMount(async () => {
-      
-    //   const fetchedArticles = await getLatestArticles();
-    //   fetchedArticles.forEach((/** @type {{ id: any; }} */ article, /** @type {any} */ index) => {
-    //     article.id = index; 
-    //   });
-    //   console.log(fetchedArticles); 
-    //   articlesStore.set(fetchedArticles);
-    // });
-    onMount(async () => {
-      const fetchedArticles = await getLatestArticles();
-      const articlesWithId = fetchedArticles.map((/** @type {any} */ article, /** @type {any} */ index) => {
-        return { ...article, id: index }; 
-      });
-      console.log(articlesWithId);
-      articlesStore.set(articlesWithId);
-      filteredArticles = articlesWithId; 
+
+
+  let searchQuery: string = '';
+  let filteredArticles: Article[] = [];
+  const bookmarksStore = writable(new Set());
+
+
+  onMount(async () => {
+    const fetchedArticles: Article[] = await getLatestArticles();
+    fetchedArticles.forEach((article, index) => {
+      article.id = index;
     });
+    console.log(fetchedArticles);
+    articlesStore.set(fetchedArticles);
+    const storedBookmarks: Article[] = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+    bookmarksStore.set(new Set(storedBookmarks.map(article => article.id)));
+  });
 
-
-    function searchArticles() {
-    filteredArticles = $articlesStore.filter(article =>
+  function searchArticles(): void {
+    filteredArticles = $articlesStore.filter((article: Article) =>
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.abstract.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -50,41 +40,39 @@
   } else {
     filteredArticles = $articlesStore;
   }
-	
-	/**
-	 * @param {number} articleId
-	 */
-	function goToArticle(articleId) {
+
+  function goToArticle(articleId: number): void {
     console.log("Navigating to article with ID:", articleId);
-		goto(`/article/${articleId}`);
-	}
-
-  // Vérifie si un article est bookmarké
-  /**
-	 * @param {{ id: any; }} article
-	 */
-  function isBookmarked(article) {
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
-    return bookmarks.some((/** @type {{ id: any; }} */ b) => b.id === article.id);
+    goto(`/article/${articleId}`);
   }
 
-  /**
-	 * @param {{ id: any; }} article
-	 */
-  function toggleBookmark(article) {
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
-    const index = bookmarks.findIndex((/** @type {{ id: any; }} */ b) => b.id === article.id);
+  function isBookmarked(article: Article): boolean {
+    const bookmarks: Article[] = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+    return bookmarks.some((b) => b.id === article.id);
+  }
 
-    if (index === -1) {
-      bookmarks.push(article);
+  function toggleBookmark(article: Article): void {
+  let tempUpdatedBookmarksIds;
+  bookmarksStore.update(current => {
+    const updatedBookmarks = new Set(current);
+    if (updatedBookmarks.has(article.id)) {
+      updatedBookmarks.delete(article.id);
     } else {
-      bookmarks.splice(index, 1);
+      updatedBookmarks.add(article.id);
     }
+    tempUpdatedBookmarksIds = Array.from(updatedBookmarks);
+    return updatedBookmarks;
+  });
 
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-  }
-  let showSearchBar = false;
+  const bookmarksArray = Array.from(updatedBookmarks).map(id => {
 
+    return $articlesStore.find(a => a.id === id);;
+
+  });
+  localStorage.setItem('bookmarks', JSON.stringify(bookmarksArray));
+}
+
+  let showSearchBar: boolean = false;
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
@@ -95,8 +83,8 @@
     </a>
     <div class="flex space-x-4 mr-5">
       <a href="/" class="hover:text-ray-300">Home</a>
-      <a href="/about" >About</a>
       <a href="/bookmarks" >BookMarked</a>
+      <a href="/about" >About</a>
     <i class="fas fa-search cursor-pointer" on:click={() => showSearchBar = !showSearchBar}></i>
   </div>
 </div>
@@ -123,9 +111,9 @@
         <p class="text-gray-600 mb-4">{article.abstract}</p>
         <p> {article.published_date}</p><br><br>
         <button 
-          on:click={() => toggleBookmark(article)} 
-          class="bookmark-btn {isBookmarked(article) ? 'bg-green-500' : 'bg-gray-500'} text-white font-bold py-2 px-4 rounded hover:shadow-md transition duration-300">
-          {isBookmarked(article) ? 'Bookmarked' : 'Bookmark'}
+          on:click={() => toggleBookmark(article)}
+          class="bookmark-btn {$bookmarksStore.has(article.id) ? 'bg-green-500' : 'bg-gray-500'} text-white font-bold py-2 px-4 rounded hover:shadow-md transition duration-300">
+          {$bookmarksStore.has(article.id) ? 'Bookmarked' : 'Bookmark'}
         </button>
       </div>
     </div>

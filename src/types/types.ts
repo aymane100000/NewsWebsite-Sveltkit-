@@ -1,9 +1,11 @@
 export interface Article {
-	published_date: any;
-	  multimedia: Multimedia[];
-    id: number;
-    title: string;
-    abstract: string;
+  id: number;
+  author: any;
+	published_date: string;
+	multimedia: Multimedia[];
+  title: string;
+  abstract: string;
+  isBookmark:boolean;
   }
 
   export interface Multimedia {

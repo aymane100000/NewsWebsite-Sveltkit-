@@ -1,18 +1,6 @@
-<script>
-    import { articlesStore } from '../../../stores.js';
-    import { page } from '$app/stores';
-    import '../../../article_style.css';
-    //import type { Article } from '../../types/types';
-  
-    let articleId = Number($page.params.id);
-    console.log("Loaded article ID:", articleId);
-    $: article = $articlesStore.find(a => a.id === articleId);
+ 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-    // onMount(async () => {
-    //   console.log("Article ID:", articleId);
-    //   // articlesStore.set(articles);
-    // }); 
-  </script>
   <nav class="bg-gray-800 text-white p">
     <div class="container mx-auto flex justify-between items-center">
       <a href="/" class="logo-link">
@@ -20,8 +8,8 @@
       </a>
       <div class="flex space-x-4 mr-5">
         <a href="/" class="hover:text-ray-300">Home</a>
+        <a href="/bookmarks" >Bookmarks</a>
         <a href="/about" >About</a>
-        <a href="/about" >Articles</a>
       </div>
     </div>
   </nav>
@@ -56,3 +44,28 @@
     </div>
   </div>
 </footer>
+ <script lang="ts">
+    import '../../../global.css';
+    import { onMount } from 'svelte';
+    import { page } from '$app/stores';
+    import { loadArticleFromStore } from '../../../lib/api';
+    import type { Article } from '../../../types/types';
+    import '../../../global.css';
+    import '../../../style.css';
+
+
+    let article: Article | null = null;
+    
+    onMount(() => {
+        const articleId = Number($page.params.id);
+        article = loadArticleFromStore(articleId) || retrieveArticleFromLocalStorage();
+    });
+
+    function retrieveArticleFromLocalStorage(): Article | null {
+        const storedArticleData = localStorage.getItem('currentArticle');
+        return storedArticleData ? JSON.parse(storedArticleData) : null;
+    }
+
+</script>
+
+
