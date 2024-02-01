@@ -52,15 +52,14 @@
   }
 
   function toggleBookmark(article: Article): void {
-  let tempUpdatedBookmarksIds;
+  let updatedBookmarks;
   bookmarksStore.update(current => {
-    const updatedBookmarks = new Set(current);
+    updatedBookmarks = new Set(current);
     if (updatedBookmarks.has(article.id)) {
       updatedBookmarks.delete(article.id);
     } else {
       updatedBookmarks.add(article.id);
     }
-    tempUpdatedBookmarksIds = Array.from(updatedBookmarks);
     return updatedBookmarks;
   });
 
